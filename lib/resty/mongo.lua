@@ -9,12 +9,19 @@ local _M = { _VERSION = '0.01' }
 local mt = { __index = _M }
 
 
+local string_sub = string.sub
 function _M.connect(self, config)
     local mongo = mongodb:new()
 
     mongo:set_timeout(config.timeout)
 
-    local ok, err = mongo:connect(config.host, config.port)
+    local ok, err
+    if string_sub(config.host, 1, 5) == "unix:" then
+        ok, err = mongo:connect(config.host)
+    else
+        ok, err = mongo:connect(config.host, config.port)
+    end
+
     if not ok then
         get_instance().debug:log_error("failed to connect mongodb: ", err)
         return

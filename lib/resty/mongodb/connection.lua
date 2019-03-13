@@ -1,12 +1,11 @@
-
-local util         = require "resty.mongodb.util"
-local bson         = require "resty.mongodb.bson"
-local database     = require "resty.mongodb.database"
-local tcp          = util.socket.tcp
-local split        = util.split
-local substr       = string.sub
-local assert       = assert
-local error        = error
+local util = require "resty.mongodb.util"
+local bson = require "resty.mongodb.bson"
+local database = require "resty.mongodb.database"
+local tcp = util.socket.tcp
+local split = util.split
+local substr = string.sub
+local assert = assert
+local error = error
 local setmetatable = setmetatable
 
 local connection = {}
@@ -20,7 +19,7 @@ connection.user_name = nil
 connection.password = nil
 connection.db_name = 'admin'
 connection.query_timeout = 1000
-connection.max_bson_size = 4*1024*1024
+connection.max_bson_size = 4 * 1024 * 1024
 connection.find_master = false;
 connection.sock = nil
 
@@ -28,11 +27,16 @@ connection.hosts = {}
 connection.arbiters = {}
 connection.passives = {}
 
+local string_sub = string.sub
 
 function connection:connect(host, port)
-    self.host  = host or self.host
-    self.port  = port or self.port
+    self.host = host or self.host
+    self.port = port or self.port
     local sock = self.sock
+
+    if string_sub(host, 1, 5) == "unix:" then
+        return sock:connect(self.host)
+    end
     return sock:connect(self.host, self.port)
 end
 
@@ -74,7 +78,7 @@ function connection:database_names()
     if r.ok == 1 then
         return r.databases
     end
-    error("failed to get database names:"..r.errmsg)
+    error("failed to get database names:" .. r.errmsg)
 end
 
 --[[ todo
@@ -85,7 +89,7 @@ end
 
 
 function connection:get_database(name)
-    return database.new(name,self)
+    return database.new(name, self)
 end
 
 --[[ todo
@@ -95,7 +99,7 @@ end
 --]]
 
 function connection:get_max_bson_size()
-    local buildinfo =  self:get_database("admin"):run_command({buildinfo = true})
+    local buildinfo = self:get_database("admin"):run_command({ buildinfo = true })
     if buildinfo then
         return buildinfo.maxBsonObjectSize or 4194304
     end
@@ -105,7 +109,7 @@ end
 
 function connection:new()
     local sock = tcp()
-    return setmetatable({sock = sock}, connection_mt)
+    return setmetatable({ sock = sock }, connection_mt)
 end
 
 
